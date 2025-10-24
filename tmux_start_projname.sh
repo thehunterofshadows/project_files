@@ -5,7 +5,7 @@
 # Creates/maintains a tmux session "gps_weather" rooted at WORKDIR with:
 #   - Left pane: 80% width running: codex --dangerously-bypass-approvals-and-sandbox
 #   - Right pane: 20% width interactive shell
-#   - New windows automatically start in WORKDIR (via hook; no default-path)
+#   - New windows AND panes automatically start in WORKDIR (via hooks)
 # Also launches ttyd on PORT to expose the tmux session over the web.
 #
 # Usage:
@@ -56,6 +56,18 @@ set_new_window_hook() {
     'run-shell "tmux send-keys -t #{session_name}:#{window_index}.0 \"cd $WORKDIR\" C-m"' || true
 }
 
+set_new_pane_hook() {
+  # Ensure every new pane starts in WORKDIR
+  tmux set-hook -t "$SESSION" after-split-window \
+    'run-shell "tmux send-keys -t #{session_name}:#{window_index}.#{pane_index} \"cd $WORKDIR\" C-m"' || true
+}
+
+set_default_path() {
+  # Set default-path for the session if tmux version supports it
+  # This is a fallback method for newer tmux versions
+  tmux set-option -t "$SESSION" default-path "$WORKDIR" 2>/dev/null || true
+}
+
 start_tmux_session() {
   mkdir -p "$WORKDIR"
   cd "$WORKDIR"
@@ -71,8 +83,10 @@ start_tmux_session() {
     enforce_80_20
     set_resize_hook
 
-    # Ensure new windows open in WORKDIR (back-compat method)
+    # Ensure new windows and panes open in WORKDIR
     set_new_window_hook
+    set_new_pane_hook
+    set_default_path
 
     # Start Codex on the left pane
     tmux send-keys -t "$SESSION:0.0" "$CODEX_CMD" C-m
@@ -86,6 +100,8 @@ start_tmux_session() {
     enforce_80_20
     set_resize_hook
     set_new_window_hook
+    set_new_pane_hook
+    set_default_path
   fi
 }
 
@@ -128,7 +144,7 @@ main() {
       start_ttyd
       echo "✅ tmux session '$SESSION' ready.";
       echo "   Left: codex (80%) | Right: shell (20%)";
-      echo "   New windows auto-cd to: $WORKDIR";
+      echo "   New windows AND panes auto-cd to: $WORKDIR";
       echo "🌐 Web: http://<host>:$PORT (log: $LOGFILE)";
       ;;
     status)
@@ -150,4 +166,3 @@ main() {
 }
 
 main "$@"
-
