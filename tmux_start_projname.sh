@@ -1,27 +1,62 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
-# tmux_start_gps_weather.sh  —  Backward-compatible (no tmux 'default-path')
+# tmux_start_projname.sh  —  Configurable tmux session starter with .env support
 # -----------------------------------------------------------------------------
-# Creates/maintains a tmux session "gps_weather" rooted at WORKDIR with:
+# Creates/maintains a tmux session rooted at WORKDIR with:
 #   - Left pane: 80% width running: codex --dangerously-bypass-approvals-and-sandbox
 #   - Right pane: 20% width interactive shell
 #   - New windows AND panes automatically start in WORKDIR (via hooks)
 # Also launches ttyd on PORT to expose the tmux session over the web.
 #
+# Configuration via .env file (place in same directory as script):
+#   WORKDIR=/path/to/your/project
+#   TMUX_PORT=9099
+#   TMUX_SESSION_NAME=your_session_name
+#
 # Usage:
-#   chmod +x ~/tmux_start_gps_weather.sh
-#   ~/tmux_start_gps_weather.sh            # start / enforce layout (idempotent)
-#   ~/tmux_start_gps_weather.sh status     # show status
-#   ~/tmux_start_gps_weather.sh stop       # stop ttyd and tmux session
-#   ~/tmux_start_gps_weather.sh restart    # stop then start
+#   chmod +x ~/tmux_start_projname.sh
+#   ~/tmux_start_projname.sh            # start / enforce layout (idempotent)
+#   ~/tmux_start_projname.sh status     # show status
+#   ~/tmux_start_projname.sh stop       # stop ttyd and tmux session
+#   ~/tmux_start_projname.sh restart    # stop then start
 # -----------------------------------------------------------------------------
 set -euo pipefail
 
-SESSION="urlsum"
-WORKDIR="/home/justin/dockerimages/text2speech_future/urlsummary_current"
-PORT=9099
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
+
+# Default values (fallback if .env doesn't exist or values are missing)
+DEFAULT_SESSION="urlsum"
+DEFAULT_WORKDIR="/home/justin/dockerimages/text2speech_future/urlsummary_current"
+DEFAULT_PORT=9099
+
+# Load .env file if it exists
+if [[ -f "$ENV_FILE" ]]; then
+    echo "Loading configuration from $ENV_FILE"
+    # Source the .env file in a subshell to avoid polluting current environment
+    set -a  # automatically export all variables
+    source "$ENV_FILE"
+    set +a
+else
+    echo "No .env file found at $ENV_FILE, using default values"
+fi
+
+# Set variables with .env values or defaults (handle both WORKDIR and WORKDDIR)
+SESSION="${TMUX_SESSION_NAME:-$DEFAULT_SESSION}"
+WORKDIR="${WORKDIR:-${WORKDDIR:-$DEFAULT_WORKDIR}}"  # Try WORKDIR first, then WORKDDIR, then default
+PORT="${TMUX_PORT:-$DEFAULT_PORT}"
+
+# Derived variables
 LOGFILE="$WORKDIR/ttyd_${SESSION}.log"
 CODEX_CMD='codex --dangerously-bypass-approvals-and-sandbox'
+
+echo "Configuration:"
+echo "  Session: $SESSION"
+echo "  Work Directory: $WORKDIR"
+echo "  Port: $PORT"
+echo "  Log File: $LOGFILE"
+echo ""
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || {
