@@ -1,6 +1,5 @@
-base="https://raw.githubusercontent.com/thehunterofshadows/project_files/main"
-for f in checkpoint.sh restore.sh clean.sh filewatch.sh tmux_start.sh; do
-  curl -fsSL -o "$f" "$base/$f"
-done
-chmod +x checkpoint.sh restore.sh clean.sh
-echo "✅ Updated checkpoint.sh, restore.sh, clean.sh"
+repo="thehunterofshadows/project_files"
+branch="main"
+curl -fsSL "https://codeload.github.com/$repo/tar.gz/refs/heads/$branch" \
+  | tar -xz --wildcards --strip-components=1 '*/*.sh'
+chmod +x ./*.sh 2>/dev/null || true
