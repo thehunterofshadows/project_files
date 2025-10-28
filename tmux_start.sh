@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
-# tmux_start_projname.sh  —  Configurable tmux session starter with .env support
+# tmux_start.sh  —  Configurable tmux session starter with .env support
 # -----------------------------------------------------------------------------
 # Creates/maintains a tmux session rooted at WORKDIR with:
-#   - Left pane: 80% width running: codex --dangerously-bypass-approvals-and-sandbox
+#   - Left pane: 80% width running configurable command (TMUX_COMMAND)
 #   - Right pane: 20% width interactive shell
 #   - New windows AND panes automatically start in WORKDIR (via hooks)
 # Also launches ttyd on PORT to expose the tmux session over the web.
@@ -12,13 +12,14 @@
 #   WORKDIR=/path/to/your/project
 #   TMUX_PORT=9099
 #   TMUX_SESSION_NAME=your_session_name
+#   TMUX_COMMAND="opencode"
 #
 # Usage:
-#   chmod +x ~/tmux_start_projname.sh
-#   ~/tmux_start_projname.sh            # start / enforce layout (idempotent)
-#   ~/tmux_start_projname.sh status     # show status
-#   ~/tmux_start_projname.sh stop       # stop ttyd and tmux session
-#   ~/tmux_start_projname.sh restart    # stop then start
+#   chmod +x ./tmux_start.sh
+#   ./tmux_start.sh            # start / enforce layout (idempotent)
+#   ./tmux_start.sh status     # show status
+#   ./tmux_start.sh stop       # stop ttyd and tmux session
+#   ./tmux_start.sh restart    # stop then start
 # -----------------------------------------------------------------------------
 set -euo pipefail
 
@@ -30,11 +31,11 @@ ENV_FILE="$SCRIPT_DIR/.env"
 DEFAULT_SESSION="urlsum"
 DEFAULT_WORKDIR="/home/justin/dockerimages/text2speech_future/urlsummary_current"
 DEFAULT_PORT=9099
+DEFAULT_COMMAND='codex --dangerously-bypass-approvals-and-sandbox'
 
 # Load .env file if it exists
 if [[ -f "$ENV_FILE" ]]; then
     echo "Loading configuration from $ENV_FILE"
-    # Source the .env file in a subshell to avoid polluting current environment
     set -a  # automatically export all variables
     source "$ENV_FILE"
     set +a
@@ -44,18 +45,20 @@ fi
 
 # Set variables with .env values or defaults (handle both WORKDIR and WORKDDIR)
 SESSION="${TMUX_SESSION_NAME:-$DEFAULT_SESSION}"
-WORKDIR="${WORKDIR:-${WORKDDIR:-$DEFAULT_WORKDIR}}"  # Try WORKDIR first, then WORKDDIR, then default
+WORKDIR="${WORKDIR:-${WORKDDIR:-$DEFAULT_WORKDIR}}"
 PORT="${TMUX_PORT:-$DEFAULT_PORT}"
+MAIN_CMD="${TMUX_COMMAND:-$DEFAULT_COMMAND}"
 
 # Derived variables
 LOGFILE="$WORKDIR/ttyd_${SESSION}.log"
-CODEX_CMD='codex --dangerously-bypass-approvals-and-sandbox'
 
 echo "Configuration:"
 echo "  Session: $SESSION"
 echo "  Work Directory: $WORKDIR"
 echo "  Port: $PORT"
+echo "  Main Command: $MAIN_CMD"
 echo "  Log File: $LOGFILE"
+
 echo ""
 
 require_cmd() {
@@ -99,7 +102,6 @@ set_new_pane_hook() {
 
 set_default_path() {
   # Set default-path for the session if tmux version supports it
-  # This is a fallback method for newer tmux versions
   tmux set-option -t "$SESSION" default-path "$WORKDIR" 2>/dev/null || true
 }
 
@@ -123,8 +125,8 @@ start_tmux_session() {
     set_new_pane_hook
     set_default_path
 
-    # Start Codex on the left pane
-    tmux send-keys -t "$SESSION:0.0" "$CODEX_CMD" C-m
+    # Start the configured command on the left pane
+    tmux send-keys -t "$SESSION:0.0" "$MAIN_CMD" C-m
   else
     # Session exists — ensure 2 panes, enforce layout, hooks
     local pane_count
@@ -178,7 +180,7 @@ main() {
       start_tmux_session
       start_ttyd
       echo "✅ tmux session '$SESSION' ready.";
-      echo "   Left: codex (80%) | Right: shell (20%)";
+      echo "   Left: $MAIN_CMD (80%) | Right: shell (20%)";
       echo "   New windows AND panes auto-cd to: $WORKDIR";
       echo "🌐 Web: http://<host>:$PORT (log: $LOGFILE)";
       ;;
@@ -187,7 +189,7 @@ main() {
       ;;
     stop)
       stop_all
-      echo "🛑 Stopped ttyd on $PORT and tmux session '$SESSION' (if running)."
+      echo "🛑 Stopped ttyd on $PORT and tmux session '$SESSION' (if running).";
       ;;
     restart)
       stop_all
