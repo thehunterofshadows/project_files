@@ -52,15 +52,6 @@ MAIN_CMD="${TMUX_COMMAND:-$DEFAULT_COMMAND}"
 # Derived variables
 LOGFILE="$WORKDIR/ttyd_${SESSION}.log"
 
-echo "Configuration:"
-echo "  Session: $SESSION"
-echo "  Work Directory: $WORKDIR"
-echo "  Port: $PORT"
-echo "  Main Command: $MAIN_CMD"
-echo "  Log File: $LOGFILE"
-
-echo ""
-
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || {
     echo "Error: '$1' is required but not installed/in PATH." >&2
@@ -73,7 +64,6 @@ is_port_listening() {
 }
 
 enforce_80_20() {
-  # Resize left pane (0) to ~80% of current window width
   local ww
   ww=$(tmux display -p -t "$SESSION:0" '#{window_width}') || true
   [[ -n "${ww:-}" && "$ww" -gt 0 ]] || return 0
@@ -82,72 +72,23 @@ enforce_80_20() {
 }
 
 set_resize_hook() {
-  # Keep 80/20 when the window is resized
   tmux set-hook -t "$SESSION" window-resized \
     'run-shell "WW=$(tmux display -p -t #{window_id} \"#{window_width}\"); tmux resize-pane -t #{window_id}.0 -x $(( WW * 80 / 100 ))"' || true
 }
 
 set_new_window_hook() {
-  # Ensure every new window starts in WORKDIR on older tmux (no default-path)
   tmux set-environment -t "$SESSION" WORKDIR "$WORKDIR" || true
   tmux set-hook -t "$SESSION" after-new-window \
     'run-shell "tmux send-keys -t #{session_name}:#{window_index}.0 \"cd $WORKDIR\" C-m"' || true
 }
 
 set_new_pane_hook() {
-  # Ensure every new pane starts in WORKDIR
   tmux set-hook -t "$SESSION" after-split-window \
     'run-shell "tmux send-keys -t #{session_name}:#{window_index}.#{pane_index} \"cd $WORKDIR\" C-m"' || true
 }
 
 set_default_path() {
-  # Set default-path for the session if tmux version supports it
   tmux set-option -t "$SESSION" default-path "$WORKDIR" 2>/dev/null || true
-}
-
-start_tmux_session() {
-  mkdir -p "$WORKDIR"
-  cd "$WORKDIR"
-
-  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-    # Create detached session with one window named 'main' in WORKDIR
-    tmux new-session -d -s "$SESSION" -c "$WORKDIR" -n main
-
-    # Pane split: create right pane, leaving left as pane 0
-    tmux split-window -h -t "$SESSION:0" -c "$WORKDIR"
-
-    # Force 80/20 layout and keep it on resize
-    enforce_80_20
-    set_resize_hook
-
-    # Ensure new windows and panes open in WORKDIR
-    set_new_window_hook
-    set_new_pane_hook
-    set_default_path
-
-    # Start the configured command on the left pane
-    tmux send-keys -t "$SESSION:0.0" "$MAIN_CMD" C-m
-  else
-    # Session exists — ensure 2 panes, enforce layout, hooks
-    local pane_count
-    pane_count=$(tmux list-panes -t "$SESSION:0" | wc -l | tr -d ' ')
-    if [ "$pane_count" -lt 2 ]; then
-      tmux split-window -h -t "$SESSION:0" -c "$WORKDIR"
-    fi
-    enforce_80_20
-    set_resize_hook
-    set_new_window_hook
-    set_new_pane_hook
-    set_default_path
-  fi
-}
-
-start_ttyd() {
-  mkdir -p "$(dirname "$LOGFILE")"
-  if ! is_port_listening; then
-    nohup ttyd -p "$PORT" tmux attach -t "$SESSION" >>"$LOGFILE" 2>&1 &
-    sleep 0.2
-  fi
 }
 
 stop_all() {
@@ -170,6 +111,45 @@ status() {
   fi
 }
 
+start_tmux_session() {
+  mkdir -p "$WORKDIR"
+  cd "$WORKDIR"
+
+  # NEW BEHAVIOR: If session exists, stop it before recreating
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "Session '$SESSION' already running — stopping and reloading..."
+    stop_all
+    # small delay to let processes exit cleanly
+    sleep 0.2
+  fi
+
+  # Create detached session with one window named 'main' in WORKDIR
+  tmux new-session -d -s "$SESSION" -c "$WORKDIR" -n main
+
+  # Pane split: create right pane, leaving left as pane 0
+  tmux split-window -h -t "$SESSION:0" -c "$WORKDIR"
+
+  # Force 80/20 layout and keep it on resize
+  enforce_80_20
+  set_resize_hook
+
+  # Ensure new windows and panes open in WORKDIR
+  set_new_window_hook
+  set_new_pane_hook
+  set_default_path
+
+  # Start the configured command on the left pane
+  tmux send-keys -t "$SESSION:0.0" "$MAIN_CMD" C-m
+}
+
+start_ttyd() {
+  mkdir -p "$(dirname "$LOGFILE")"
+  if ! is_port_listening; then
+    nohup ttyd -p "$PORT" tmux attach -t "$SESSION" >>"$LOGFILE" 2>&1 &
+    sleep 0.2
+  fi
+}
+
 main() {
   require_cmd tmux
   require_cmd ttyd
@@ -179,7 +159,7 @@ main() {
     start)
       start_tmux_session
       start_ttyd
-      echo "✅ tmux session '$SESSION' ready.";
+      echo "✅ tmux session '$SESSION' reloaded and ready.";
       echo "   Left: $MAIN_CMD (80%) | Right: shell (20%)";
       echo "   New windows AND panes auto-cd to: $WORKDIR";
       echo "🌐 Web: http://<host>:$PORT (log: $LOGFILE)";
