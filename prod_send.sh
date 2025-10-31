@@ -68,15 +68,6 @@ echo
 # Generate timestamp for backup
 TIMESTAMP=$(date +"%y%m%d_%H%M%S")
 
-# Define remote commands
-if $IS_REMOTE; then
-    SSH_CMD="ssh $REMOTE_USER_HOST"
-    SCP_CMD="scp"
-else
-    SSH_CMD="bash -c"
-    SCP_CMD="cp"
-fi
-
 # Function to run command (remote or local)
 run_cmd() {
     if $IS_REMOTE; then
@@ -133,20 +124,33 @@ echo "📤 Copying checkpoint to production server..."
 TEMP_CHECKPOINT="/tmp/checkpoint_${TIMESTAMP}.tar.gz"
 copy_file "$SELECTED_CHECKPOINT" "$TEMP_CHECKPOINT"
 
-# Extract checkpoint on remote
+# Extract checkpoint on remote (strip-components=1 removes the nested folder structure)
 echo "📦 Extracting checkpoint..."
 run_cmd "cd '$REMOTE_PATH' && tar -xzf '$TEMP_CHECKPOINT' --strip-components=1 && rm '$TEMP_CHECKPOINT'"
 
-# Set proper permissions
-echo "🔐 Setting permissions..."
-run_cmd "find '$REMOTE_PATH' -type f -name '*.sh' -exec chmod +x {} \;"
+# Download fresh copies of all .sh scripts
+echo "📥 Downloading fresh script copies..."
+run_cmd "cd '$REMOTE_PATH' && 
+repo='thehunterofshadows/project_files'
+branch='main'
+curl -fsSL \"https://codeload.github.com/\$repo/tar.gz/refs/heads/\$branch\" \\
+  | tar -xz --wildcards --strip-components=1 '*/*.sh'
+chmod +x ./*.sh 2>/dev/null || true
+echo '✅ Fresh scripts downloaded and made executable'"
+
+# Run clean.sh to handle Docker restart and cleanup
+echo "🧹 Running clean.sh for final setup..."
+run_cmd "cd '$REMOTE_PATH' && if [ -f clean.sh ]; then 
+    ./clean.sh && echo '✅ Clean script completed'; 
+else 
+    echo '⚠️  clean.sh not found, skipping'; 
+fi"
 
 echo
 echo "✅ Deployment completed successfully!"
 echo "📍 Deployed: $(basename "$SELECTED_CHECKPOINT")"
 echo "💾 Backup saved: $BACKUP_NAME"
 echo "🎯 Production location: $PROD_LOCATION"
+echo "🧹 Clean script executed for final setup"
 echo
-echo "🔧 Next steps:"
-echo "   - Verify the deployment"
-echo "   - Start services if needed: docker compose up -d"
+echo "🎉 Your production environment is ready!"
