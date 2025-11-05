@@ -29,7 +29,6 @@ ENV_FILE="$SCRIPT_DIR/.env"
 
 # Default values (fallback if .env doesn't exist or values are missing)
 DEFAULT_SESSION="urlsum"
-DEFAULT_WORKDIR="/home/justin/dockerimages/text2speech_future/urlsummary_current"
 DEFAULT_PORT=9099
 DEFAULT_COMMAND='codex --dangerously-bypass-approvals-and-sandbox'
 
@@ -45,9 +44,18 @@ fi
 
 # Set variables with .env values or defaults (handle both WORKDIR and WORKDDIR)
 SESSION="${TMUX_SESSION_NAME:-$DEFAULT_SESSION}"
-WORKDIR="${WORKDIR:-${WORKDDIR:-$DEFAULT_WORKDIR}}"
 PORT="${TMUX_PORT:-$DEFAULT_PORT}"
 MAIN_CMD="${TMUX_COMMAND:-$DEFAULT_COMMAND}"
+
+# WORKDIR is required - exit if not set
+if [[ -z "${WORKDIR:-${WORKDDIR:-}}" ]]; then
+    echo "Error: WORKDIR must be set in .env file" >&2
+    echo "Example .env file:" >&2
+    echo "WORKDIR=/path/to/your/project" >&2
+    exit 1
+fi
+
+WORKDIR="${WORKDIR:-$WORKDDIR}"
 
 # Derived variables
 LOGFILE="$WORKDIR/ttyd_${SESSION}.log"
