@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
-# tmux_start.sh  —  Configurable tmux session starter with .env support
+# tmux_start.sh  —  Configurable tmux session starter with .env_project_tools support
 # -----------------------------------------------------------------------------
 # Creates/maintains a tmux session rooted at WORKDIR with:
 #   - Left pane: 80% width running configurable command (TMUX_COMMAND)
@@ -8,7 +8,7 @@
 #   - New windows AND panes automatically start in WORKDIR (via hooks)
 # Also launches ttyd on PORT to expose the tmux session over the web.
 #
-# Configuration via .env file (place in same directory as script):
+# Configuration via .env_project_tools file (place in same directory as script):
 #   WORKDIR=/path/to/your/project
 #   TMUX_PORT=9099
 #   TMUX_SESSION_NAME=your_session_name
@@ -25,32 +25,32 @@ set -euo pipefail
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="$SCRIPT_DIR/.env"
+ENV_FILE="$SCRIPT_DIR/.env_project_tools"
 
-# Default values (fallback if .env doesn't exist or values are missing)
+# Default values (fallback if .env_project_tools doesn't exist or values are missing)
 DEFAULT_SESSION="urlsum"
 DEFAULT_PORT=9099
 DEFAULT_COMMAND='codex --dangerously-bypass-approvals-and-sandbox'
 
-# Load .env file if it exists
+# Load .env_project_tools file if it exists
 if [[ -f "$ENV_FILE" ]]; then
     echo "Loading configuration from $ENV_FILE"
     set -a  # automatically export all variables
     source "$ENV_FILE"
     set +a
 else
-    echo "No .env file found at $ENV_FILE, using default values"
+    echo "No .env_project_tools file found at $ENV_FILE, using default values"
 fi
 
-# Set variables with .env values or defaults (handle both WORKDIR and WORKDDIR)
+# Set variables with .env_project_tools values or defaults (handle both WORKDIR and WORKDDIR)
 SESSION="${TMUX_SESSION_NAME:-$DEFAULT_SESSION}"
 PORT="${TMUX_PORT:-$DEFAULT_PORT}"
 MAIN_CMD="${TMUX_COMMAND:-$DEFAULT_COMMAND}"
 
 # WORKDIR is required - exit if not set
 if [[ -z "${WORKDIR:-${WORKDDIR:-}}" ]]; then
-    echo "Error: WORKDIR must be set in .env file" >&2
-    echo "Example .env file:" >&2
+    echo "Error: WORKDIR must be set in .env_project_tools file" >&2
+    echo "Example .env_project_tools file:" >&2
     echo "WORKDIR=/path/to/your/project" >&2
     exit 1
 fi
