@@ -2,7 +2,7 @@
 # restore.sh
 # Lists checkpoints, prompts for version, docker compose down, backs up current folder (with 'b'),
 # clears current folder, and restores the selected version.
-# Excludes checkpoint.sh, restore.sh, clean.sh from backups and from being overwritten on restore.
+# Excludes checkpoint.sh, restore.sh, clean.sh, .env_project_tools from backups and from being overwritten on restore.
 
 set -euo pipefail
 
@@ -71,7 +71,7 @@ else
 fi
 
 echo
-# Backup current folder with 'b' (exclude the three scripts)
+# Backup current folder with 'b' (exclude the three scripts and config file)
 BACK_BASE="${NEXT_VERSION}b_${B_MSG_SAFE}"
 BACK_ARCHIVE="$CHECK_DIR/${BACK_BASE}.tar.gz"
 i=1
@@ -85,6 +85,7 @@ tar \
   --exclude="${CUR_DIR}/checkpoint.sh" \
   --exclude="${CUR_DIR}/restore.sh" \
   --exclude="${CUR_DIR}/clean.sh" \
+  --exclude="${CUR_DIR}/.env_project_tools" \
   -czf "$BACK_ARCHIVE" -C .. "$CUR_DIR"
 echo "Backup complete."
 BACK_ARCHIVE_HUMAN="$(du -h "$BACK_ARCHIVE" | cut -f1)"
@@ -93,10 +94,10 @@ echo "Backup archive size: $BACK_ARCHIVE_HUMAN"
 echo "Checkpoint folder total: $CHECK_DIR_HUMAN"
 echo
 
-# Clear current folder contents but protect the three scripts
+# Clear current folder contents but protect the three scripts and config file
 echo "Clearing current folder contents: $PWD"
 shopt -s dotglob nullglob
-PROTECT=("checkpoint.sh" "restore.sh" "clean.sh")
+PROTECT=("checkpoint.sh" "restore.sh" "clean.sh" ".env_project_tools")
 for item in *; do
   skip=false
   for p in "${PROTECT[@]}"; do
@@ -106,12 +107,13 @@ for item in *; do
   rm -rf -- "$item"
 done
 
-# Restore selected archive WITHOUT overwriting our three scripts
+# Restore selected archive WITHOUT overwriting our three scripts and config file
 echo "Restoring from: $(basename "$RESTORE_FILE")"
 tar \
   --exclude="${CUR_DIR}/checkpoint.sh" \
   --exclude="${CUR_DIR}/restore.sh" \
   --exclude="${CUR_DIR}/clean.sh" \
+  --exclude="${CUR_DIR}/.env_project_tools" \
   --overwrite -xzf "$RESTORE_FILE" -C ..
 echo "✅ Restored: $(basename "$RESTORE_FILE")"
 echo "Backup saved: $BACK_ARCHIVE"
