@@ -5,16 +5,16 @@
 
 set -euo pipefail
 
-# Load PROD_LOCATION from .env file
-if [[ ! -f ".env" ]]; then
-    echo "❌ .env file not found. Please create it with PROD_LOCATION variable."
+# Load PROD_LOCATION from .env_project_tools file
+if [[ ! -f ".env_project_tools" ]]; then
+    echo "❌ .env_project_tools file not found. Please create it with PROD_LOCATION variable."
     exit 1
 fi
 
-source .env
+source .env_project_tools
 
 if [[ -z "${PROD_LOCATION:-}" ]]; then
-    echo "❌ PROD_LOCATION not set in .env file"
+    echo "❌ PROD_LOCATION not set in .env_project_tools file"
     echo "Example: PROD_LOCATION=user@server:~/project/"
     exit 1
 fi
