@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # checkpoint.sh
 # Compress current folder into ../checkpoint/checkpoint_<foldername>/<x.y>_<message>.tar.gz
-# Increments version by 0.1 and prints sizes. Excludes checkpoint.sh, restore.sh, clean.sh, .env_project_tools.
+# Increments version by 0.1 and prints sizes. Excludes all project_files repo tools.
 
 set -euo pipefail
 
@@ -38,11 +38,17 @@ while [[ -e "$ARCHIVE" ]]; do
   ARCHIVE="$CHECK_DIR/${BASENAME}_$i.tar.gz"; ((i++))
 done
 
-# Exclude these scripts and config files when archiving (note paths include top-level CUR_DIR/)
+# Exclude all project_files repo tools when archiving (note paths include top-level CUR_DIR/)
 tar \
   --exclude="${CUR_DIR}/checkpoint.sh" \
   --exclude="${CUR_DIR}/restore.sh" \
   --exclude="${CUR_DIR}/clean.sh" \
+  --exclude="${CUR_DIR}/filewatch.sh" \
+  --exclude="${CUR_DIR}/git_sync.sh" \
+  --exclude="${CUR_DIR}/prod_send.sh" \
+  --exclude="${CUR_DIR}/pull_tools.sh" \
+  --exclude="${CUR_DIR}/tmux_start.sh" \
+  --exclude="${CUR_DIR}/.env_temp" \
   --exclude="${CUR_DIR}/.env_project_tools" \
   -czf "$ARCHIVE" -C .. "$CUR_DIR"
 
