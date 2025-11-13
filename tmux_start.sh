@@ -142,9 +142,9 @@ start_tmux_session() {
   set_resize_hook
 
   # Ensure new windows and panes open in WORKDIR
-  set_new_window_hook
-  set_new_pane_hook
-  set_default_path
+  #set_new_window_hook
+  #set_new_pane_hook
+  #set_default_path
 
   # Start the configured command on the left pane
   tmux send-keys -t "$SESSION:0.0" "$MAIN_CMD" C-m
