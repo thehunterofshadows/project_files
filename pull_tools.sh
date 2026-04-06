@@ -17,9 +17,6 @@ echo "🔄 Pulling fresh tools from project_files repository..."
 repo="thehunterofshadows/project_files"
 branch="main"
 
-# Capture list of .sh files before download
-before=$(ls ./*.sh 2>/dev/null | xargs -n1 basename || true)
-
 # Download and extract all .sh files from the repository
 curl -fsSL "https://codeload.github.com/$repo/tar.gz/refs/heads/$branch" \
   | tar -xz --wildcards --strip-components=1 '*/*.sh'
@@ -31,24 +28,37 @@ echo "✅ Tools updated successfully!"
 echo "📁 Available tools in current directory:"
 ls -1 ./*.sh 2>/dev/null | sed 's|^\./|  - |' || echo "  (no .sh files found)"
 
-# --- Add pulled tool filenames to .gitignore if not already present ---
+# --- Add fixed list of entries to .gitignore if not already present ---
 echo ""
 echo "📝 Checking .gitignore for tool entries..."
 
 gitignore_file=".gitignore"
 added_count=0
 
-for script in ./*.sh; do
-  filename=$(basename "$script")
-  # Skip pull_tools.sh itself — you likely want to track that one
-  if [[ "$filename" == "pull_tools.sh" ]]; then
-    continue
-  fi
-  if [[ -f "$gitignore_file" ]] && grep -qxF "$filename" "$gitignore_file"; then
-    echo "  ✔ $filename already in .gitignore"
+# Fixed list of entries to ensure are in .gitignore
+gitignore_entries=(
+  "checkpoint.sh"
+  "claude_run.sh"
+  "clean.sh"
+  "filewatch.sh"
+  "git_sync.sh"
+  "prod_clean.sh"
+  "prod_send.sh"
+  "pull_tools.sh"
+  "push_clean.sh"
+  "restore.sh"
+  "tmux_start.sh"
+  ".env"
+  ".env*"
+  ".env_temp"
+)
+
+for entry in "${gitignore_entries[@]}"; do
+  if [[ -f "$gitignore_file" ]] && grep -qxF "$entry" "$gitignore_file"; then
+    echo "  ✔ $entry already in .gitignore"
   else
-    echo "$filename" >> "$gitignore_file"
-    echo "  ➕ Added $filename to .gitignore"
+    echo "$entry" >> "$gitignore_file"
+    echo "  ➕ Added $entry to .gitignore"
     ((added_count++))
   fi
 done
