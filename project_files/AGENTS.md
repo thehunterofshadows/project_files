@@ -1,12 +1,12 @@
 # AGENTS.md — Coding Agent Guide
 
-This repository ([thehunterofshadows/project_files](https://github.com/thehunterofshadows/project_files)) is a self-contained `project_files/` directory of reusable bash scripts that can be cloned into any project to provide a common set of development tools.
+This repository ([thehunterofshadows/project_files](https://github.com/thehunterofshadows/project_files)) is a self-contained `project_files/` directory of reusable bash scripts, plus a root-level `README_projectfiles.md`, that can be cloned into any project to provide a common set of development tools.
 
 ---
 
 ## Purpose
 
-These scripts are designed to live inside `project_files/` at the root of a host project. Keeping every repository file in that one subdirectory avoids conflicts with files the host project already has.
+These scripts are designed to live inside `project_files/` at the root of a host project. The root-level `README_projectfiles.md` is intentionally named to avoid conflicting with a host project's own `README.md`.
 
 **Clone this repo into the host project as `project_files/`:**
 ```bash
@@ -58,8 +58,9 @@ When asked to add, modify, or remove scripts:
 
 ## Conventions
 
-- **All repository files live in `project_files/`** — scripts, `README.md`, `AGENTS.md`, and `.env_temp` are intentionally kept there to avoid conflicts with the host project.
-- **The repo root stays empty except for `project_files/`** — do not add root-level files unless explicitly asked.
+- **Tooling files live in `project_files/`** — scripts, `AGENTS.md`, and `.env_temp` are intentionally kept there to avoid conflicts with the host project.
+- **The root-level README is `README_projectfiles.md`** — this is intentionally outside `project_files/` and renamed from `README.md` to avoid conflicts with the host project.
+- **The repo root stays empty except for `project_files/` and `README_projectfiles.md`** — do not add other root-level files unless explicitly asked.
 - **Scripts must be portable bash** — avoid platform-specific assumptions; prefer `/usr/bin/env bash` shebangs.
 - **Scripts operate on the caller's project root** — set `PROJECT_ROOT="$(pwd)"` near the top of each script and use paths relative to that current working directory.
 - **Do not anchor project paths to the script directory** — avoid `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` for project file operations.
