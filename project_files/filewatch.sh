@@ -7,6 +7,8 @@ REFRESH_TIME=10   # seconds between refreshes
 MAX_FILES=15      # number of most recently modified files to display
 # ─────────────────────────────────────────────
 
+PROJECT_ROOT="$(pwd)"
+
 # Detect OS (mac uses -r instead of -d for date)
 if [[ "$OSTYPE" == "darwin"* ]]; then
   date_cmd() { date -r "$1" +"%s"; }   # macOS epoch only

@@ -6,6 +6,7 @@
 
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
 CUR_DIR="$(basename "$PWD")"
 CHECK_PARENT="$(cd .. && pwd -P)"
 CHECK_BASE="$CHECK_PARENT/checkpoint"
@@ -71,7 +72,7 @@ else
 fi
 
 echo
-# Backup current folder with 'b' (exclude all project_files repo tools)
+# Backup current folder with 'b' (exclude the project_files tool folder)
 BACK_BASE="${NEXT_VERSION}b_${B_MSG_SAFE}"
 BACK_ARCHIVE="$CHECK_DIR/${BACK_BASE}.tar.gz"
 i=1
@@ -82,15 +83,7 @@ done
 echo "Creating backup of current folder as:"
 echo "  $BACK_ARCHIVE"
 tar \
-  --exclude="${CUR_DIR}/checkpoint.sh" \
-  --exclude="${CUR_DIR}/restore.sh" \
-  --exclude="${CUR_DIR}/clean.sh" \
-  --exclude="${CUR_DIR}/filewatch.sh" \
-  --exclude="${CUR_DIR}/git_sync.sh" \
-  --exclude="${CUR_DIR}/prod_send.sh" \
-  --exclude="${CUR_DIR}/pull_tools.sh" \
-  --exclude="${CUR_DIR}/tmux_start.sh" \
-  --exclude="${CUR_DIR}/.env_temp" \
+  --exclude="${CUR_DIR}/project_files" \
   --exclude="${CUR_DIR}/.env_project_tools" \
   -czf "$BACK_ARCHIVE" -C .. "$CUR_DIR"
 echo "Backup complete."
@@ -100,10 +93,10 @@ echo "Backup archive size: $BACK_ARCHIVE_HUMAN"
 echo "Checkpoint folder total: $CHECK_DIR_HUMAN"
 echo
 
-# Clear current folder contents but protect all project_files repo tools
+# Clear current folder contents but protect the project_files tool folder
 echo "Clearing current folder contents: $PWD"
 shopt -s dotglob nullglob
-PROTECT=("checkpoint.sh" "restore.sh" "clean.sh" "filewatch.sh" "git_sync.sh" "prod_send.sh" "pull_tools.sh" "tmux_start.sh" ".env_temp" ".env_project_tools")
+PROTECT=("project_files" ".env_project_tools")
 for item in *; do
   skip=false
   for p in "${PROTECT[@]}"; do
@@ -113,18 +106,10 @@ for item in *; do
   rm -rf -- "$item"
 done
 
-# Restore selected archive WITHOUT overwriting our project_files repo tools
+# Restore selected archive WITHOUT overwriting the project_files tool folder
 echo "Restoring from: $(basename "$RESTORE_FILE")"
 tar \
-  --exclude="${CUR_DIR}/checkpoint.sh" \
-  --exclude="${CUR_DIR}/restore.sh" \
-  --exclude="${CUR_DIR}/clean.sh" \
-  --exclude="${CUR_DIR}/filewatch.sh" \
-  --exclude="${CUR_DIR}/git_sync.sh" \
-  --exclude="${CUR_DIR}/prod_send.sh" \
-  --exclude="${CUR_DIR}/pull_tools.sh" \
-  --exclude="${CUR_DIR}/tmux_start.sh" \
-  --exclude="${CUR_DIR}/.env_temp" \
+  --exclude="${CUR_DIR}/project_files" \
   --exclude="${CUR_DIR}/.env_project_tools" \
   --overwrite -xzf "$RESTORE_FILE" -C ..
 echo "✅ Restored: $(basename "$RESTORE_FILE")"

@@ -2,31 +2,36 @@
 # -----------------------------------------------------------------------------
 # pull_tools.sh  —  Download fresh copies of all tools from project_files repo
 # -----------------------------------------------------------------------------
-# Downloads all .sh scripts from the project_files repository to the current
-# directory and makes them executable. Useful for syncing tools across projects.
-# Also adds each tool's filename to .gitignore if not already present.
+# Downloads the project_files repository into ./project_files and makes scripts
+# executable. Useful for syncing tools across projects.
+# Also adds project_files/ to .gitignore if not already present.
 #
 # Usage:
-#   chmod +x pull_tools.sh
-#   ./pull_tools.sh
+#   chmod +x project_files/pull_tools.sh
+#   ./project_files/pull_tools.sh
 # -----------------------------------------------------------------------------
 set -euo pipefail
+
+PROJECT_ROOT="$(pwd)"
+TOOLS_DIR="${PROJECT_ROOT}/project_files"
 
 echo "🔄 Pulling fresh tools from project_files repository..."
 
 repo="thehunterofshadows/project_files"
 branch="main"
 
-# Download and extract all .sh files from the repository
-curl -fsSL "https://codeload.github.com/$repo/tar.gz/refs/heads/$branch" \
-  | tar -xz --wildcards --strip-components=1 '*/*.sh'
+mkdir -p "$TOOLS_DIR"
 
-# Make all shell scripts executable
-chmod +x ./*.sh 2>/dev/null || true
+# Download and extract the repository's project_files/ folder into ./project_files.
+curl -fsSL "https://codeload.github.com/$repo/tar.gz/refs/heads/$branch" \
+  | tar -xz --wildcards --strip-components=2 -C "$TOOLS_DIR" '*/project_files/*'
+
+# Make all shell scripts executable.
+chmod +x "$TOOLS_DIR"/*.sh 2>/dev/null || true
 
 echo "✅ Tools updated successfully!"
-echo "📁 Available tools in current directory:"
-ls -1 ./*.sh 2>/dev/null | sed 's|^\./|  - |' || echo "  (no .sh files found)"
+echo "📁 Available tools in project_files/:"
+ls -1 "$TOOLS_DIR"/*.sh 2>/dev/null | sed "s|^${TOOLS_DIR}/|  - project_files/|" || echo "  (no .sh files found)"
 
 # --- Add fixed list of entries to .gitignore if not already present ---
 echo ""
@@ -35,22 +40,9 @@ echo "📝 Checking .gitignore for tool entries..."
 gitignore_file=".gitignore"
 added_count=0
 
-# Fixed list of entries to ensure are in .gitignore
+# Fixed list of entries to ensure are in .gitignore.
 gitignore_entries=(
-  "checkpoint.sh"
-  "claude_run.sh"
-  "clean.sh"
-  "filewatch.sh"
-  "git_sync.sh"
-  "prod_clean.sh"
-  "prod_send.sh"
-  "pull_tools.sh"
-  "push_clean.sh"
-  "restore.sh"
-  "tmux_start.sh"
-  ".env"
-  ".env*"
-  ".env_temp"
+  "project_files/"
 )
 
 for entry in "${gitignore_entries[@]}"; do

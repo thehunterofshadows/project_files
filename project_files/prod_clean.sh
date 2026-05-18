@@ -11,6 +11,8 @@
 
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
+
 # ── Inject .env.production → .env everywhere it exists ───────────────────────
 echo "🔍 Scanning for .env.production files..."
 found=0
@@ -60,4 +62,3 @@ if [[ -f docker-compose.yml || -f compose.yaml || -f compose.yml ]]; then
 else
     echo "No compose file found, skipping pull/up."
 fi
-

@@ -4,8 +4,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/docker_visual_run.sh"
+PROJECT_ROOT="$(pwd)"
+source "${PROJECT_ROOT}/project_files/docker_visual_run.sh"
 
 # Register all steps upfront so the progress bar knows the total
 vr_init \

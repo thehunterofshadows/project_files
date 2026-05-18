@@ -5,6 +5,7 @@
 
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
 CUR_DIR="$(basename "$PWD")"
 CHECK_PARENT="$(cd .. && pwd -P)"
 CHECK_BASE="$CHECK_PARENT/checkpoint"
@@ -38,17 +39,9 @@ while [[ -e "$ARCHIVE" ]]; do
   ARCHIVE="$CHECK_DIR/${BASENAME}_$i.tar.gz"; ((i++))
 done
 
-# Exclude all project_files repo tools when archiving (note paths include top-level CUR_DIR/)
+# Exclude the self-contained project_files tool folder when archiving.
 tar \
-  --exclude="${CUR_DIR}/checkpoint.sh" \
-  --exclude="${CUR_DIR}/restore.sh" \
-  --exclude="${CUR_DIR}/clean.sh" \
-  --exclude="${CUR_DIR}/filewatch.sh" \
-  --exclude="${CUR_DIR}/git_sync.sh" \
-  --exclude="${CUR_DIR}/prod_send.sh" \
-  --exclude="${CUR_DIR}/pull_tools.sh" \
-  --exclude="${CUR_DIR}/tmux_start.sh" \
-  --exclude="${CUR_DIR}/.env_temp" \
+  --exclude="${CUR_DIR}/project_files" \
   --exclude="${CUR_DIR}/.env_project_tools" \
   -czf "$ARCHIVE" -C .. "$CUR_DIR"
 

@@ -8,24 +8,23 @@
 #   - New windows AND panes automatically start in WORKDIR (via hooks)
 # Also launches ttyd on PORT to expose the tmux session over the web.
 #
-# Configuration via .env_project_tools file (place in same directory as script):
+# Configuration via .env_project_tools file (place in the project root):
 #   WORKDIR=/path/to/your/project
 #   TMUX_PORT=9099
 #   TMUX_SESSION_NAME=your_session_name
 #   TMUX_COMMAND="opencode"
 #
 # Usage:
-#   chmod +x ./tmux_start.sh
-#   ./tmux_start.sh            # start / enforce layout (idempotent)
-#   ./tmux_start.sh status     # show status
-#   ./tmux_start.sh stop       # stop ttyd and tmux session
-#   ./tmux_start.sh restart    # stop then start
+#   chmod +x ./project_files/tmux_start.sh
+#   ./project_files/tmux_start.sh            # start / enforce layout (idempotent)
+#   ./project_files/tmux_start.sh status     # show status
+#   ./project_files/tmux_start.sh stop       # stop ttyd and tmux session
+#   ./project_files/tmux_start.sh restart    # stop then start
 # -----------------------------------------------------------------------------
 set -euo pipefail
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="$SCRIPT_DIR/.env_project_tools"
+PROJECT_ROOT="$(pwd)"
+ENV_FILE="$PROJECT_ROOT/.env_project_tools"
 
 # Default values (fallback if .env_project_tools doesn't exist or values are missing)
 DEFAULT_SESSION="urlsum"

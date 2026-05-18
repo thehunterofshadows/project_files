@@ -4,12 +4,12 @@
 
 set -euo pipefail
 
-echo "==================================================================="
-echo "Starting parallel execution: git push & clean.sh"
-echo "==================================================================="
+PROJECT_ROOT="$(pwd)"
+CLEAN_SCRIPT="${PROJECT_ROOT}/project_files/clean.sh"
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "==================================================================="
+echo "Starting parallel execution: git push & project_files/clean.sh"
+echo "==================================================================="
 
 # Function to run git push with labeled output
 run_git_push() {
@@ -27,12 +27,12 @@ run_git_push() {
 # Function to run clean.sh with labeled output
 run_clean() {
     echo ""
-    echo "--- CLEAN.SH STARTING ---"
-    if bash "${SCRIPT_DIR}/clean.sh"; then
-        echo "--- CLEAN.SH COMPLETED SUCCESSFULLY ---"
+    echo "--- PROJECT_FILES/CLEAN.SH STARTING ---"
+    if bash "${CLEAN_SCRIPT}"; then
+        echo "--- PROJECT_FILES/CLEAN.SH COMPLETED SUCCESSFULLY ---"
         return 0
     else
-        echo "--- CLEAN.SH FAILED ---"
+        echo "--- PROJECT_FILES/CLEAN.SH FAILED ---"
         return 1
     fi
 }
@@ -40,7 +40,7 @@ run_clean() {
 # Export functions so they can be run in subshells
 export -f run_git_push
 export -f run_clean
-export SCRIPT_DIR
+export CLEAN_SCRIPT
 
 # Run both commands in parallel and capture their PIDs
 run_git_push &

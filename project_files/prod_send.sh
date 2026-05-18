@@ -5,6 +5,8 @@
 
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
+
 # Load PROD_LOCATION from .env_project_tools file
 if [[ ! -f ".env_project_tools" ]]; then
     echo "❌ .env_project_tools file not found. Please create it with PROD_LOCATION variable."
@@ -133,17 +135,18 @@ echo "📥 Downloading fresh script copies..."
 run_cmd "cd '$REMOTE_PATH' && 
 repo='thehunterofshadows/project_files'
 branch='main'
+mkdir -p project_files
 curl -fsSL \"https://codeload.github.com/\$repo/tar.gz/refs/heads/\$branch\" \\
-  | tar -xz --wildcards --strip-components=1 '*/*.sh'
-chmod +x ./*.sh 2>/dev/null || true
+  | tar -xz --wildcards --strip-components=2 -C project_files '*/project_files/*'
+chmod +x project_files/*.sh 2>/dev/null || true
 echo '✅ Fresh scripts downloaded and made executable'"
 
 # Run clean.sh to handle Docker restart and cleanup
 echo "🧹 Running clean.sh for final setup..."
-run_cmd "cd '$REMOTE_PATH' && if [ -f clean.sh ]; then 
-    ./clean.sh && echo '✅ Clean script completed'; 
+run_cmd "cd '$REMOTE_PATH' && if [ -f project_files/clean.sh ]; then 
+    ./project_files/clean.sh && echo '✅ Clean script completed'; 
 else 
-    echo '⚠️  clean.sh not found, skipping'; 
+    echo '⚠️  project_files/clean.sh not found, skipping'; 
 fi"
 
 echo

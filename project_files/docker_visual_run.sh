@@ -3,12 +3,14 @@
 # docker_visual_run.sh — Reusable visual step runner  (source this file)
 #
 # Usage:
-#   source ./docker_visual_run.sh
+#   source ./project_files/docker_visual_run.sh
 #   vr_init "🔄:Step One" "🏗️:Step Two" "🧪:Step Three"
 #   trap 'vr_summary' EXIT
 #   vr_step "Step One"  your_command --args
 #   vr_step "Step Two"  another_command
 # ─────────────────────────────────────────────────────────────────────────────
+
+PROJECT_ROOT="$(pwd)"
 
 # ── ANSI ──────────────────────────────────────────────────────────────────────
 _R='\e[31m' _G='\e[32m' _C='\e[36m'

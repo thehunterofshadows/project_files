@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+PROJECT_ROOT="$(pwd)"
+
 # Stop stack if a compose file exists here
 if [[ -f docker-compose.yml || -f compose.yaml || -f compose.yml ]]; then
   echo "Stopping containers via: docker compose down"
