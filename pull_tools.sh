@@ -22,9 +22,9 @@ branch="main"
 
 mkdir -p "$TOOLS_DIR"
 
-# Download and extract the repository's project_files/ folder into ./project_files.
+# Download and extract the repository root into ./project_files.
 curl -fsSL "https://codeload.github.com/$repo/tar.gz/refs/heads/$branch" \
-  | tar -xz --wildcards --strip-components=2 -C "$TOOLS_DIR" '*/project_files/*'
+  | tar -xz --strip-components=1 -C "$TOOLS_DIR"
 
 # Make all shell scripts executable.
 chmod +x "$TOOLS_DIR"/*.sh 2>/dev/null || true

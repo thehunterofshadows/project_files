@@ -137,7 +137,7 @@ repo='thehunterofshadows/project_files'
 branch='main'
 mkdir -p project_files
 curl -fsSL \"https://codeload.github.com/\$repo/tar.gz/refs/heads/\$branch\" \\
-  | tar -xz --wildcards --strip-components=2 -C project_files '*/project_files/*'
+  | tar -xz --strip-components=1 -C project_files
 chmod +x project_files/*.sh 2>/dev/null || true
 echo '✅ Fresh scripts downloaded and made executable'"
 

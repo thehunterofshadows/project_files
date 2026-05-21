@@ -1,6 +1,6 @@
 # project_files
 
-Reusable project tooling scripts live in the `project_files/` subdirectory so they can be cloned into an existing project without conflicting with the project's own files.
+Reusable project tooling scripts are kept at this repository's root so the repository can be cloned directly into an existing project's `project_files/` directory.
 
 ## Install
 
@@ -38,6 +38,22 @@ PROJECT_ROOT="$(pwd)"
 
 They do not anchor project paths to the script's own location.
 
+## Legacy Cleanup
+
+If a project still has the old root-level copies of these tools, run:
+
+```bash
+./project_files/project_files_cleanup.sh
+```
+
+Preview the cleanup first with:
+
+```bash
+./project_files/project_files_cleanup.sh --dry-run
+```
+
+The cleanup removes known legacy root-level tool scripts. It only removes root `README.md`, `AGENTS.md`, and `.env_temp` when they look like files from this repository.
+
 ## Scripts
 
 | Script | Purpose |
@@ -56,6 +72,7 @@ They do not anchor project paths to the script's own location.
 | `project_files/restore.sh` | Restores from a checkpoint archive |
 | `project_files/setup_git.sh` | Configures git user settings |
 | `project_files/tmux_start.sh` | Starts a tmux session with a standard layout |
+| `project_files/project_files_cleanup.sh` | Removes legacy root-level tool files from a host project |
 
 ## Environment
 

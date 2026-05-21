@@ -1,12 +1,12 @@
 # AGENTS.md — Coding Agent Guide
 
-This repository ([thehunterofshadows/project_files](https://github.com/thehunterofshadows/project_files)) is a self-contained `project_files/` directory of reusable bash scripts, plus a root-level `README_projectfiles.md`, that can be cloned into any project to provide a common set of development tools.
+This repository ([thehunterofshadows/project_files](https://github.com/thehunterofshadows/project_files)) is a self-contained set of reusable bash scripts that should be cloned as a host project's `project_files/` directory.
 
 ---
 
 ## Purpose
 
-These scripts are designed to live inside `project_files/` at the root of a host project. The root-level `README_projectfiles.md` is intentionally named to avoid conflicting with a host project's own `README.md`.
+These scripts are stored at this repository's root so cloning the repository into a host project as `project_files/` produces `./project_files/*.sh`, not `./project_files/project_files/*.sh`. `README_projectfiles.md` is intentionally named to avoid conflicting with a host project's own `README.md`, and `project_files_cleanup.sh` removes legacy root-level copies from projects that used the old layout.
 
 **Clone this repo into the host project as `project_files/`:**
 ```bash
@@ -42,6 +42,7 @@ chmod +x project_files/*.sh 2>/dev/null || true
 | `project_files/restore.sh` | Restores from a checkpoint or backup |
 | `project_files/setup_git.sh` | Configures git settings for a project |
 | `project_files/tmux_start.sh` | Starts a tmux session with a standard layout |
+| `project_files/project_files_cleanup.sh` | Removes legacy root-level tool files from a host project |
 
 ---
 
@@ -49,37 +50,38 @@ chmod +x project_files/*.sh 2>/dev/null || true
 
 When asked to add, modify, or remove scripts:
 
-1. **Adding a new script** — Create the `.sh` file inside `project_files/`. Make sure it is self-contained and portable. Add an entry to the Scripts Overview table in this file.
-2. **Modifying a script** — Edit the file directly in `project_files/`. Update its description in the table if the purpose changes.
-3. **Removing a script** — Delete the file from `project_files/` and remove its row from the table.
-4. **Always keep this file in sync** — The Scripts Overview table should always reflect the actual `.sh` files present in `project_files/`.
+1. **Adding a new script** — Create the `.sh` file at the repository root. Make sure it is self-contained and portable. Add an entry to the Scripts Overview table in this file.
+2. **Modifying a script** — Edit the root-level script directly. Update its description in the table if the purpose changes.
+3. **Removing a script** — Delete the root-level script and remove its row from the table.
+4. **Always keep this file in sync** — The Scripts Overview table should always reflect the actual `.sh` files present at the repository root.
 
 ---
 
 ## Conventions
 
-- **Tooling files live in `project_files/`** — scripts, `AGENTS.md`, and `.env_temp` are intentionally kept there to avoid conflicts with the host project.
-- **The root-level README is `README_projectfiles.md`** — this is intentionally outside `project_files/` and renamed from `README.md` to avoid conflicts with the host project.
-- **The repo root stays empty except for `project_files/` and `README_projectfiles.md`** — do not add other root-level files unless explicitly asked.
+- **Tooling files live at the repository root** — this prevents a nested `project_files/project_files/` directory after cloning.
+- **The README is `README_projectfiles.md`** — this is intentionally renamed from `README.md` to avoid conflicts with a host project if copied manually.
+- **The cleanup helper is `project_files_cleanup.sh`** — run it from a host project as `./project_files/project_files_cleanup.sh` to remove old root-level tool files from projects that used the legacy layout.
+- **The repo root is the install payload** — do not add an inner `project_files/` directory unless explicitly asked.
 - **Scripts must be portable bash** — avoid platform-specific assumptions; prefer `/usr/bin/env bash` shebangs.
 - **Scripts operate on the caller's project root** — set `PROJECT_ROOT="$(pwd)"` near the top of each script and use paths relative to that current working directory.
 - **Do not anchor project paths to the script directory** — avoid `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` for project file operations.
 - **Scripts should be self-documenting** — include a comment block at the top of each script explaining what it does, any required environment variables, and usage examples.
-- **No secrets in scripts** — use `.env` files or environment variables for credentials. The `project_files/.env_temp` file in this repo is a template; never commit real credentials.
+- **No secrets in scripts** — use `.env` files or environment variables for credentials. The `.env_temp` file in this repo is a template; never commit real credentials.
 - **Executable bit** — scripts should be committed with the executable bit set (`chmod +x`).
 
 ---
 
 ## Environment Variables
 
-Scripts may rely on a `.env_project_tools` file in the host project root. See `project_files/.env_temp` for expected variables. Copy and populate it locally as needed, but never commit real credentials.
+Scripts may rely on a `.env_project_tools` file in the host project root. See `.env_temp` for expected variables. Copy and populate it locally as needed, but never commit real credentials.
 
 ---
 
 ## Notes for Agents
 
-- Read `project_files/AGENTS.md` first before making any changes to the repo.
+- Read `AGENTS.md` first before making any changes to the repo.
 - When adding a new script, also update the **Scripts Overview** table above.
-- Do not reorganize files out of `project_files/` unless explicitly asked.
+- Do not add a nested `project_files/` directory unless explicitly asked.
 - Prefer editing existing scripts over creating new ones when the functionality overlaps.
 - Commit messages should be concise and descriptive (e.g., `Add deploy_staging.sh for staging environment`).
